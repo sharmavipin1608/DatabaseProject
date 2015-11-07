@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			html, body, #map {
+        		width: 100%;
+        		height: 100%;
+      		}
+
+      		#map {
+        		position: relative;
+      		}
+		</style>
+
+		<script src="https://maps.googleapis.com/maps/api/js"></script>
+
+		<script>
+			//array containing truck positions
+			var truckLocations = [
+			  	33.81053176901896, -118.14311027526855,
+			  	33.80910545330386, -118.11787605285645,
+			  	33.80083235326659, -118.10534477233887,
+			  	33.781216205214896, -118.10688972473145,
+			  	33.769087611447425, -118.13976287841797,
+			  	33.80350301652127, -118.15829577186378,
+			  	33.784101492367796, -118.18267168739112
+			];
+
+			var originsT = [];
+			var destinationsT = [];
+			var service = new google.maps.DistanceMatrixService();
+			var query = {
+			    origins: originsT,
+			    destinations: destinationsT,
+			    travelMode: google.maps.TravelMode.DRIVING,
+			    unitSystem: google.maps.UnitSystem.IMPERIAL
+			  };
+
+			//variable to store map object
+			var map;
+
+			//variable to store current lat and long of the customer
+			var currentLatlng;
+
+			//variable to store marker at the location clicked by the user
+			var locationChosenMarker = null;
+
+			//initializing info window
+			var infowindow = new google.maps.InfoWindow(
+        	{ 
+          		size: new google.maps.Size(225,75)
+        	});
+
+        	//call initializeMap on page load
+			google.maps.event.addDomListener(window, 'load', initializeMap);
+
+			function initializeMap(){
+				alert("map initialised");
+
+				if (navigator.geolocation) {
+        			navigator.geolocation.getCurrentPosition(success, error);
+    			} else {
+        			alert('geolocation not supported');
+			    }
+			}
+
+			//If there is error in getting the current location
+		    function error(msg) {
+		        alert('error: ' + msg);
+		    }
+
+			//If current location is located 
+		    function success(position){
+		    	//alert("geolocation successful")
+
+		    	//alert(position.coords.latitude + " " + position.coords.longitude)
+
+		        //get the current latitude and logitude 
+		        currentLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+		        var mapOptions = {
+			        zoom: 14,
+		            center: currentLatlng,
+		            scaleControl: true,
+		            draggable: true,
+		            scrollwheel: true,
+		            navigationControl: true,
+		            mapTypeControl: true,
+			        streetViewControl: true
+			    }
+
+			    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+
+			    //mark current location of the user
+			    alert("marking current location");
+			    markLocation(position.coords.latitude, position.coords.longitude, null);
+
+			    //add event listeners
+			    addListeners();
+
+			    //populate origins and destinations
+			    populateData();
+
+			    //mark the locations of the trucks
+			    markTrucks();
+			}
+
+			function populateData(){
+				alert("populateData");
+				originsT[0] = currentLatlng;
+				//alert("dfsdfsdf ");
+				var count=0;
+				for(var i=0; i<truckLocations.length;i+=2){
+					//alert(i);
+					var latLng = new google.maps.LatLng(truckLocations[i],truckLocations[i+1]);
+					destinationsT[count] = latLng;
+					count++;
+				}
+				//alert("exiting function");
+			}
+
+			function markLocation(latitude, longitude, image){
+				var latlng = new google.maps.LatLng(latitude, longitude);
+				//alert("markCurrentUserLocation");
+
+				var marker = new google.maps.Marker({
+			    	map: map,
+			    	position: latlng,
+			    	icon: image
+			    });
+			}
+
+			function addListeners(){
+				alert("addListeners");
+				google.maps.event.addListener(map, 'click', function() {
+	        		infowindow.close();
+	        	});
+
+	        	google.maps.event.addListener(map, 'click', function(event) {
+	        		alert("inside listener");
+	    			//call function to create marker
+	         		if (locationChosenMarker) {
+	            		locationChosenMarker.setMap(null);
+	            		locationChosenMarker = null;
+	         		}
+
+	         		//reverse geocoding and create marker at the location user clicks on the map
+	         		var geocoder = new google.maps.Geocoder;
+	         		geocoder.geocode({'location':event.latLng}, function(results,status){
+	         			alert("geocode return result");
+	         			if (status === google.maps.GeocoderStatus.OK) {
+						    if (results[1]) {
+						    	alert("address : " + results[1].formatted_address);
+						    	locationChosenMarker = createMarker(event.latLng, "name", "<b>Location</b><br>"+results[1].formatted_address);
+						    }
+						    else{
+						    	locationChosenMarker = createMarker(event.latLng, "name", "<b>Location</b><br>"+event.latLng);
+						    }
+						}    	
+	         		});
+
+	         		
+
+	     			getDistanceOfTrucks(33.81, -118.14);
+				
+	     		});
+     		}
+
+     		//Mark the location as user clicks on the map
+     		function createMarker(latlng, name, html) {
+			    var contentString = html;
+
+			    locationChosenMarker = new google.maps.Marker({
+			        position: latlng,
+			        map: map,
+			        zIndex: Math.round(latlng.lat()*-100000)<<5
+			    });
+
+			    google.maps.event.addListener(locationChosenMarker, 'click', function() {
+			        infowindow.setContent(contentString); 
+			        infowindow.open(map,locationChosenMarker);
+			    });
+
+			    google.maps.event.trigger(locationChosenMarker, 'click');    
+			    return locationChosenMarker;
+			}
+
+			//mark the trucks on the map
+			//TODO: add the label so that trucks can be differentiated
+			function markTrucks(){
+				var image = "truck-2.png";
+				alert("marking trucks");
+				for(var i=0; i<truckLocations.length; i+=2){
+					alert(i + " " + truckLocations[i] + " " + truckLocations[i+1]);
+					markLocation(truckLocations[i], truckLocations[i+1], image);
+				}
+			}
+
+			function getDistanceOfTrucks(latitude,longitude){
+				alert("get disance" + currentLatlng);
+				
+
+				/*alert("truckLocations : " + truckLocations[0] + " " + truckLocations[1]);
+
+				//var destinationTruck = new google.maps.Latlng(33.81053176901896, -118.14311027526855);
+				
+				var latlng = new google.maps.LatLng(latitude, longitude);
+
+				var sss = new google.maps.LatLng(33.81, -118.14);
+
+				alert("destination : " + latitude + " " + longitude);*/
+
+				service.getDistanceMatrix(query, function(response,status){
+					alert("distance matrix callback");
+					if (status == google.maps.DistanceMatrixStatus.OK) {
+					    var origins = response.originAddresses;
+					    var destinations = response.destinationAddresses;
+					    alert("distances returned : " + origins.length + " : " + destinations.length);
+					    for (var i = 0; i < origins.length; i++) {
+					      var results = response.rows[i].elements;
+					      for (var j = 0; j < results.length; j++) {
+					        var element = results[j];
+					        var distance = element.distance.text;
+					        var duration = element.duration.text;
+					        var from = origins[i];
+					        var to = destinations[j];
+					        alert("distance from : " + from + " to : " + to + " is : " + distance + " and it will take : " + duration );
+					      }
+					    }
+					  }
+				});
+
+				
+			}
+
+			function callback(response, status){
+					aler("callback");
+					//alert(response.destinationAddresses);
+				}
+
+			
+			
+		</script>
+	</head>
+
+	<body>
+		<div id = "map"></div>
+	</body>
+
+</html>
