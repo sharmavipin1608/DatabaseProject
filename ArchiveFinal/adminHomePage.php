@@ -12,7 +12,7 @@
         
         <script type="text/javascript">
             window.onload = function(){
-                //alert("loaded");
+                alert("loaded");
             }
         </script>
     </head>

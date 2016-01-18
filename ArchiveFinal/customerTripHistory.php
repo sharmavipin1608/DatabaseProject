@@ -41,7 +41,7 @@
         <script>
             function exportDataAsAscii(formId)
             {
-                //alert("exportDataAsAscii");
+                alert("exportDataAsAscii");
                 document.forms[formId].action = "exportDataAsASCII.php";
                 document.forms[formId].submit();
             }

@@ -17,8 +17,6 @@
     $tripHistoryResult = mysql_query($query1);
     $tripHistory = array();
     
-    //echo $query1;
-    
     while($row = mysql_fetch_array($tripHistoryResult))
             $tripHistory[] = $row;
     //echo sizeof($tripHistory);

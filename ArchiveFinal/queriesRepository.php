@@ -72,7 +72,7 @@
         $userId = $_SESSION['userId'];
         
         $acceptTripQuery = "update trip set driverId = '$userId', startTime = "
-                . "CURRENT_TIMESTAMP, status = 'T' where tripId = $tripId;";
+                . "CURRENT_TIMESTAMP, status = 'T';";
         //echo $acceptTripQuery;
         mysql_query($acceptTripQuery);
         
@@ -136,19 +136,19 @@
                 . "rate.rateId = trip.rateId;";
         $getApplicableRateResult = mysql_query($getApplicableRateQuery);
         $getApplicableRate = mysql_fetch_array($getApplicableRateResult);
-        //echo $getApplicableRateQuery;
+        echo $getApplicableRateQuery;
         
-        //echo $getApplicableRate['timeTravelled']."->".$getApplicableRate['pricePerMinute'];
-        //echo $getApplicableRate['distance']."->".$getApplicableRate['PricePerMile'];
-        //echo $getApplicableRate['basePrice'];
+        echo $getApplicableRate['timeTravelled']."->".$getApplicableRate['pricePerMinute'];
+        echo $getApplicableRate['distance']."->".$getApplicableRate['PricePerMile'];
+        echo $getApplicableRate['basePrice'];
         
         $total = $getApplicableRate['basePrice'] + ($getApplicableRate['distance'] * $getApplicableRate['PricePerMile'])
                 + ($getApplicableRate['timeTravelled'] * $getApplicableRate['pricePerMinute']);
         
-        //echo $total;
+        echo $total;
         
         $registerPaymentQuery = "insert into payment(tripId,amount) values($tripId,$total);";
-        //echo $registerPaymentQuery;
+        echo $registerPaymentQuery;
         mysql_query($registerPaymentQuery);
         
         echo $returnText;
@@ -159,21 +159,10 @@
         $latitude = trim($_GET['latitude']);
         $longitude = trim($_GET['longitude']);
         
-        $driverCurrentLoc = "select * from location where driverId = '$driverId';";
-        $driverLocResult = mysql_query($driverCurrentLoc);
-        while($row = mysql_fetch_array($driverLocResult)){
-            $result[] = $row;
-        }
-        
-        if(sizeof($result) > 0){
-            $query = "update location set latitude = $latitude,longitude = $longitude "
+        $query = "update location set latitude = $latitude,longitude = $longitude "
                 . " where driverId = '$driverId'";
-        }
-        else{
-            $query = "insert into location values('$driverId',$latitude,$longitude);";
-        }
         mysql_query($query);
-        //echo $query;
+        echo $query;
     }
     else if($purpose == "verifyUserName"){
         $userId = $_GET['userId'];
@@ -193,26 +182,6 @@
             $responseText = "success";
         }
         echo $responseText;
-    }
-    else if($purpose == "updateRate"){
-        $rateId = $_GET['rateId'];
-        $query = "update rate set status = 'D' where status = 'A'";
-        $result = mysql_query($query);
-        
-        $query1 = "update rate set status = 'A' where rateId = $rateId";
-        mysql_query($query1);
-    }
-    else if($purpose == "addRate"){
-        $rateId = $_GET['rateId'];
-        $query = "update rate set status = 'D' where status = 'A'";
-        $result = mysql_query($query);
-        
-        $pricePerMin = $_GET['pricePerMin'];
-        $pricePerMile = $_GET['pricePerMile'];
-        $basePrice = $_GET['basePrice'];
-        $query1 = "insert into rate(basePrice,pricePerMinute,pricePerMile,status) values($basePrice,$pricePerMin,$pricePerMile,'A')";
-        echo $query1;
-        mysql_query($query1);
     }
 ?>
     

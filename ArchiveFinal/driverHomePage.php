@@ -3,8 +3,6 @@ require_once('header.php');
 
 require_once('dbConnection.php');
 
-require_once 'authorizeUser.php';
-
 session_start();
 
 //echo "driverPage";

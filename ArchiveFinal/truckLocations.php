@@ -1,10 +1,7 @@
 <?php
     require_once 'dbConnection.php';
     
-    //$locationsQuery = "select * from location;";
-    $locationsQuery = "SELECT A.driverId, B.latitude, B.longitude from driver A "
-            . "left outer join location B on A.driverId = B.driverId order by "
-            . "B.longitude DESC;";
+    $locationsQuery = "select * from location;";
     $locationsQueryResult = mysql_query($locationsQuery);
     $locations = array();
     while ($row = mysql_fetch_array($locationsQueryResult)) {
@@ -17,18 +14,21 @@
     <head>
         <script type="text/javascript">
             function updateLocations(driverId){
+                //alert("hello");
                 var latitude = document.getElementById(driverId+"latitude").innerHTML;
                 var longitude = document.getElementById(driverId+"longitude").innerHTML
                 
+                alert(latitude + " " + longitude);
+                
                 if((latitude < 32 || latitude > 34) || (longitude < -119 || longitude > -117)){
-                    alert("Please read the note at the bottom of the table carefully.");
+                    alert("incorrect");
                 }
                 else{
                     var ajaxRequest = new XMLHttpRequest();
     
                     ajaxRequest.onreadystatechange = function () {
                         if (ajaxRequest.readyState == 4) {
-                            //alert(ajaxRequest.responseText);
+                            alert(ajaxRequest.responseText);
                             //var ajaxDisplay = document.getElementById('release');
                             //ajaxDisplay.innerHTML = ajaxRequest.responseText;
                         }
@@ -36,7 +36,7 @@
                     var url = "queriesRepository.php?purpose=updateLocation&\n\
                                 driverId="+driverId+"&latitude="+latitude+"\n\
                                 &longitude="+longitude;
-                    //alert(url);            
+                    alert(url);            
                     ajaxRequest.open("GET", url, true);
                     ajaxRequest.send(null);
                 }
@@ -81,9 +81,7 @@
                         ?>
                         
                     </div>
-                </div>  
-                <span style="color:red"><i>Latitude should be between 32 and 34
-                    Longitude should be between -117 and -119</i></span>
+                </div>    
             </div>
         </div>
         
